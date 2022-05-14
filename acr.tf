@@ -23,7 +23,7 @@ resource "azurerm_container_registry" "acr" {
   }
 
   dynamic "network_rule_set" {
-    for_each = lookup(var.settings, "network_rule_set", {}) != {} ? [1] : []
+    for_each = var.sku == "Premium" && lookup(var.settings, "network_rule_set", {}) != {} ? [1] : []
     content {
       default_action = lookup(var.settings.network_rule_set, "default_action", null)
 
