@@ -37,7 +37,7 @@ module "acr" {
   tags     = module.rg.rg_tags
 
   acr_name      = "acr${var.short}${var.loc}${terraform.workspace}01"
-  sku           = "Standard"
+  sku           = "Premium"
   identity_type = "SystemAssigned"
   admin_enabled = true
 
