@@ -52,8 +52,8 @@ variable "network_rule_bypass_option" {
 
 variable "public_network_access_enabled" {
   type        = bool
-  description = "If public access to your ACR should be enabled, defaults to false"
-  default     = false
+  description = "If public access to your ACR should be enabled, defaults to true"
+  default     = true
 }
 
 variable "quarantine_policy_enabled" {

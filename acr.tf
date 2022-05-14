@@ -4,7 +4,7 @@ resource "azurerm_container_registry" "acr" {
   location                      = var.location
   admin_enabled                 = var.admin_enabled
   sku                           = title(var.sku)
-  public_network_access_enabled = var.public_network_access_enabled
+  public_network_access_enabled = var.sku == "Premium" ? try(var.public_network_access_enabled, null) : null
   quarantine_policy_enabled     = var.sku == "Premium" ? try(var.quarantine_policy_enabled, null) : null
   zone_redundancy_enabled       = var.sku == "Premium" ? try(var.zone_redundancy_enabled, null) : null
   export_policy_enabled         = var.sku == "Premium" ? try(var.export_policy_enabled, null) : null
