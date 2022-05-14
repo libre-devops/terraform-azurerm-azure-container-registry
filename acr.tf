@@ -8,8 +8,8 @@ resource "azurerm_container_registry" "acr" {
   quarantine_policy_enabled     = var.sku == "Premium" ? try(var.quarantine_policy_enabled, null) : null
   zone_redundancy_enabled       = var.sku == "Premium" ? try(var.zone_redundancy_enabled, null) : null
   export_policy_enabled         = var.sku == "Premium" ? try(var.export_policy_enabled, null) : null
+  data_endpoint_enabled         = var.sku == "Premium" ? try(var.data_endpoint_enabled, null) : null
   anonymous_pull_enabled        = try(var.anonymous_pull_enabled, null)
-  data_endpoint_enabled         = try(var.data_endpoint_enabled, null)
   network_rule_bypass_option    = try(var.network_rule_bypass_option, null)
   tags                          = var.tags
 
