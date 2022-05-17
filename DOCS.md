@@ -47,3 +47,4 @@ No modules.
 | <a name="output_acr_admin_username"></a> [acr\_admin\_username](#output\_acr\_admin\_username) | The Username associated with the Container Registry Admin account - if the admin account is enabled. |
 | <a name="output_acr_id"></a> [acr\_id](#output\_acr\_id) | The ID of the Container Registry |
 | <a name="output_acr_login_server"></a> [acr\_login\_server](#output\_acr\_login\_server) | The URL that can be used to log into the container registry |
+| <a name="output_acr_principal_id"></a> [acr\_principal\_id](#output\_acr\_principal\_id) | Client ID of system assigned managed identity if created |

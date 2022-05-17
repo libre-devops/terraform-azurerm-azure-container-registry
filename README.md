@@ -30,7 +30,7 @@ module "network" {
 }
 
 module "acr" {
-  source = "registry.terraform.io/libre-devops/azure-container-registry/azurerm""
+  source = "registry.terraform.io/libre-devops/azure-container-registry/azurerm"
 
   rg_name  = module.rg.rg_name
   location = module.rg.rg_location
