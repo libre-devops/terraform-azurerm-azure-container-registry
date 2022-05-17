@@ -18,3 +18,8 @@ output "acr_login_server" {
   description = "The URL that can be used to log into the container registry"
   value       = azurerm_container_registry.acr.login_server
 }
+
+output "acr_principal_id" {
+  value       = azurerm_container_registry.acr.identity[0].principal_id
+  description = "Client ID of system assigned managed identity if created"
+}
