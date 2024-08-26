@@ -78,8 +78,10 @@ module "container_registry" {
       admin_enabled         = true
       sku                   = "Basic"
       export_policy_enabled = true
-      identity_type         = "UserAssigned"
-      identity_ids          = [azurerm_user_assigned_identity.uid.id]
+      identity_ids = [
+        azurerm_user_assigned_identity.uid.id,
+        data.azurerm_user_assigned_identity.mgmt_id.id
+      ]
     },
   ]
 }
@@ -129,8 +131,11 @@ resource "azurerm_container_group" "agent_container" {
   ip_address_type     = "Public"
 
   identity {
-    type         = "UserAssigned"
-    identity_ids = [azurerm_user_assigned_identity.uid.id]
+    type = "UserAssigned"
+    identity_ids = [
+      azurerm_user_assigned_identity.uid.id,
+      data.azurerm_user_assigned_identity.mgmt_id.id
+    ]
   }
 
   container {
