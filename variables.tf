@@ -7,8 +7,6 @@ variable "registries" {
     admin_enabled                 = optional(bool, false)
     sku                           = optional(string, "Standard")
     public_network_access_enabled = optional(bool, true)
-    trust_policy_enabled          = optional(bool, false)
-    retention_policy_in_days      = optional(number)
     quarantine_policy_enabled     = optional(bool, false)
     zone_redundancy_enabled       = optional(bool, false)
     export_policy_enabled         = optional(bool, false)
@@ -16,10 +14,9 @@ variable "registries" {
     anonymous_pull_enabled        = optional(bool, false)
     network_rule_bypass_option    = optional(string, "AzureServices")
     georeplications = optional(list(object({
-      location                  = string
-      regional_endpoint_enabled = optional(bool)
-      zone_redundancy_enabled   = optional(bool)
-      tags                      = optional(map(string))
+      location                = string
+      zone_redundancy_enabled = optional(bool)
+      tags                    = optional(map(string))
     })))
     network_rule_set = optional(object({
       default_action = string
@@ -32,9 +29,17 @@ variable "registries" {
         subnet_id = string
       })))
     }))
+    retention_policy = optional(object({
+      days    = number
+      enabled = bool
+    }))
+    trust_policy = optional(object({
+      enabled = bool
+    }))
     identity_type = optional(string)
     identity_ids  = optional(list(string))
     encryption = optional(object({
+      enabled            = bool
       key_vault_key_id   = optional(string)
       identity_client_id = optional(string)
     }))

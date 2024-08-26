@@ -11,6 +11,17 @@ module "rg" {
   tags     = local.tags
 }
 
+locals {
+  vnet_address_space = ["10.0.0.0/16"]
+}
+
+module "subnet_calculator" {
+  source = "github.com/libre-devops/terraform-null-subnet-calculator"
+
+  base_cidr    = local.vnet_address_space
+  subnet_sizes = [24]
+}
+
 module "network" {
   source = "registry.terraform.io/libre-devops/network/azurerm"
 
@@ -20,12 +31,16 @@ module "network" {
 
   vnet_name          = "vnet-${var.short}-${var.loc}-${var.env}-${random_string.random.result}"
   vnet_location      = module.rg.rg_location
-  vnet_address_space = ["10.0.0.0/16"]
+  vnet_address_space = local.vnet_address_space
 
   subnets = {
-    "sn1-${module.network.vnet_name}" = {
-      address_prefixes  = ["10.0.0.0/24"]
-      service_endpoints = ["Microsoft.Storage"]
+    for i, name in module.subnet_calculator.subnet_names :
+    name => {
+      address_prefixes  = toset([module.subnet_calculator.subnet_ranges[i]])
+      service_endpoints = ["Microsoft.Storage", "Microsoft.KeyVault"]
+      delegation = {
+        type = "Microsoft.ContainerInstance/containerGroups"
+      }
     }
   }
 }
@@ -43,7 +58,11 @@ locals {
 }
 
 module "container_registry" {
-  source = "registry.terraform.io/libre-devops/azure-container-registry/azurerm"
+  source = "../../"
+
+  depends_on = [
+    random_string.random
+  ]
 
   registries = [
     {
