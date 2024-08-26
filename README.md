@@ -40,14 +40,6 @@ resource "azurerm_container_registry" "acr" {
           ip_range = ip_rule.value.ip_range
         }
       }
-
-      dynamic "virtual_network" {
-        for_each = network_rule_set.value.virtual_network != null ? [network_rule_set.value.virtual_network] : []
-        content {
-          action    = virtual_network.value.action
-          subnet_id = virtual_network.value.subnet_id
-        }
-      }
     }
   }
 
@@ -77,7 +69,6 @@ resource "azurerm_container_registry" "acr" {
   dynamic "encryption" {
     for_each = each.value.encryption != null ? [each.value.encryption] : []
     content {
-      enabled            = encryption.value.enabled
       key_vault_key_id   = encryption.value.key_vault_key_id
       identity_client_id = encryption.value.identity_client_id
     }
@@ -136,7 +127,7 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_registries"></a> [registries](#input\_registries) | List of registry configurations. | <pre>list(object({<br>    name                          = string<br>    rg_name                       = string<br>    location                      = string<br>    admin_enabled                 = optional(bool, false)<br>    sku                           = optional(string, "Standard")<br>    public_network_access_enabled = optional(bool, true)<br>    trust_policy_enabled          = optional(bool, false)<br>    retention_policy_in_days      = optional(number)<br>    quarantine_policy_enabled     = optional(bool, false)<br>    zone_redundancy_enabled       = optional(bool, false)<br>    export_policy_enabled         = optional(bool, false)<br>    data_endpoint_enabled         = optional(bool, false)<br>    anonymous_pull_enabled        = optional(bool, false)<br>    network_rule_bypass_option    = optional(string, "AzureServices")<br>    georeplications = optional(list(object({<br>      location                  = string<br>      regional_endpoint_enabled = optional(bool)<br>      zone_redundancy_enabled   = optional(bool)<br>      tags                      = optional(map(string))<br>    })))<br>    network_rule_set = optional(object({<br>      default_action = string<br>      ip_rule = optional(list(object({<br>        action   = string<br>        ip_range = string<br>      })))<br>      virtual_network = optional(list(object({<br>        action    = string<br>        subnet_id = string<br>      })))<br>    }))<br>    identity_type = optional(string)<br>    identity_ids  = optional(list(string))<br>    encryption = optional(object({<br>      enabled            = bool<br>      key_vault_key_id   = optional(string)<br>      identity_client_id = optional(string)<br>    }))<br>    tags = optional(map(string))<br>    agent_pool = optional(list(object({<br>      name                      = string<br>      instance_count            = optional(number, 1)<br>      tier                      = optional(string, "S1")<br>      virtual_network_subnet_id = optional(string)<br>      tags                      = optional(map(string))<br>    })))<br>  }))</pre> | `[]` | no |
+| <a name="input_registries"></a> [registries](#input\_registries) | List of registry configurations. | <pre>list(object({<br>    name                          = string<br>    rg_name                       = string<br>    location                      = string<br>    admin_enabled                 = optional(bool, false)<br>    sku                           = optional(string, "Standard")<br>    public_network_access_enabled = optional(bool, true)<br>    trust_policy_enabled          = optional(bool, false)<br>    retention_policy_in_days      = optional(number)<br>    quarantine_policy_enabled     = optional(bool, false)<br>    zone_redundancy_enabled       = optional(bool, false)<br>    export_policy_enabled         = optional(bool, false)<br>    data_endpoint_enabled         = optional(bool, false)<br>    anonymous_pull_enabled        = optional(bool, false)<br>    network_rule_bypass_option    = optional(string, "AzureServices")<br>    georeplications = optional(list(object({<br>      location                  = string<br>      regional_endpoint_enabled = optional(bool)<br>      zone_redundancy_enabled   = optional(bool)<br>      tags                      = optional(map(string))<br>    })))<br>    network_rule_set = optional(object({<br>      default_action = string<br>      ip_rule = optional(list(object({<br>        action   = string<br>        ip_range = string<br>      })))<br>      virtual_network = optional(list(object({<br>        action    = string<br>        subnet_id = string<br>      })))<br>    }))<br>    identity_type = optional(string)<br>    identity_ids  = optional(list(string))<br>    encryption = optional(object({<br>      key_vault_key_id   = optional(string)<br>      identity_client_id = optional(string)<br>    }))<br>    tags = optional(map(string))<br>    agent_pool = optional(list(object({<br>      name                      = string<br>      instance_count            = optional(number, 1)<br>      tier                      = optional(string, "S1")<br>      virtual_network_subnet_id = optional(string)<br>      tags                      = optional(map(string))<br>    })))<br>  }))</pre> | `[]` | no |
 
 ## Outputs
 

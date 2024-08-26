@@ -35,7 +35,6 @@ variable "registries" {
     identity_type = optional(string)
     identity_ids  = optional(list(string))
     encryption = optional(object({
-      enabled            = bool
       key_vault_key_id   = optional(string)
       identity_client_id = optional(string)
     }))

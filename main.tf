@@ -39,14 +39,6 @@ resource "azurerm_container_registry" "acr" {
           ip_range = ip_rule.value.ip_range
         }
       }
-
-      dynamic "virtual_network" {
-        for_each = network_rule_set.value.virtual_network != null ? [network_rule_set.value.virtual_network] : []
-        content {
-          action    = virtual_network.value.action
-          subnet_id = virtual_network.value.subnet_id
-        }
-      }
     }
   }
 
@@ -76,7 +68,6 @@ resource "azurerm_container_registry" "acr" {
   dynamic "encryption" {
     for_each = each.value.encryption != null ? [each.value.encryption] : []
     content {
-      enabled            = encryption.value.enabled
       key_vault_key_id   = encryption.value.key_vault_key_id
       identity_client_id = encryption.value.identity_client_id
     }
