@@ -1,4 +1,3 @@
-```hcl
 resource "azurerm_container_registry" "acr" {
   for_each = { for registry in var.registries : registry.name => registry }
 
@@ -110,40 +109,3 @@ resource "azurerm_container_registry_agent_pool" "agent_pool" {
   virtual_network_subnet_id = try(each.value.pool.virtual_network_subnet_id, null)
   tags                      = try(each.value.pool.tags, null)
 }
-```
-## Requirements
-
-No requirements.
-
-## Providers
-
-| Name | Version |
-|------|---------|
-| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | n/a |
-
-## Modules
-
-No modules.
-
-## Resources
-
-| Name | Type |
-|------|------|
-| [azurerm_container_registry.acr](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/container_registry) | resource |
-| [azurerm_container_registry_agent_pool.agent_pool](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/container_registry_agent_pool) | resource |
-
-## Inputs
-
-| Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
-| <a name="input_registries"></a> [registries](#input\_registries) | List of registry configurations. | <pre>list(object({<br>    name                          = string<br>    rg_name                       = string<br>    location                      = string<br>    admin_enabled                 = optional(bool, false)<br>    sku                           = optional(string, "Standard")<br>    public_network_access_enabled = optional(bool, true)<br>    trust_policy_enabled          = optional(bool, false)<br>    retention_policy_in_days      = optional(number)<br>    quarantine_policy_enabled     = optional(bool, false)<br>    zone_redundancy_enabled       = optional(bool, false)<br>    export_policy_enabled         = optional(bool, false)<br>    data_endpoint_enabled         = optional(bool, false)<br>    anonymous_pull_enabled        = optional(bool, false)<br>    network_rule_bypass_option    = optional(string, "AzureServices")<br>    georeplications = optional(list(object({<br>      location                  = string<br>      regional_endpoint_enabled = optional(bool)<br>      zone_redundancy_enabled   = optional(bool)<br>      tags                      = optional(map(string))<br>    })))<br>    network_rule_set = optional(object({<br>      default_action = string<br>      ip_rule = optional(list(object({<br>        action   = string<br>        ip_range = string<br>      })))<br>      virtual_network = optional(list(object({<br>        action    = string<br>        subnet_id = string<br>      })))<br>    }))<br>    identity_type = optional(string)<br>    identity_ids  = optional(list(string))<br>    encryption = optional(object({<br>      enabled            = bool<br>      key_vault_key_id   = optional(string)<br>      identity_client_id = optional(string)<br>    }))<br>    tags = optional(map(string))<br>    agent_pool = optional(list(object({<br>      name                      = string<br>      instance_count            = optional(number, 1)<br>      tier                      = optional(string, "S1")<br>      virtual_network_subnet_id = optional(string)<br>      tags                      = optional(map(string))<br>    })))<br>  }))</pre> | `[]` | no |
-
-## Outputs
-
-| Name | Description |
-|------|-------------|
-| <a name="output_acr_admin_password"></a> [acr\_admin\_password](#output\_acr\_admin\_password) | The Username associated with the Container Registry Admin account - if the admin account is enabled. |
-| <a name="output_acr_admin_username"></a> [acr\_admin\_username](#output\_acr\_admin\_username) | The Username associated with the Container Registry Admin account - if the admin account is enabled. |
-| <a name="output_acr_id"></a> [acr\_id](#output\_acr\_id) | The ID of the Container Registry |
-| <a name="output_acr_login_server"></a> [acr\_login\_server](#output\_acr\_login\_server) | The URL that can be used to log into the container registry |
-| <a name="output_acr_principal_id"></a> [acr\_principal\_id](#output\_acr\_principal\_id) | Client ID of system assigned managed identity if created |
