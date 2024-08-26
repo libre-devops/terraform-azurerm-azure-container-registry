@@ -49,6 +49,11 @@ output "registry_login_servers" {
   value       = [for r in azurerm_container_registry.acr : r.login_server]
 }
 
+output "registry_names" {
+  description = "The names of the created Azure Container Registries."
+  value       = [for r in azurerm_container_registry.acr : r.name]
+}
+
 output "registry_skus" {
   description = "The SKUs of the created Azure Container Registries."
   value       = [for r in azurerm_container_registry.acr : r.sku]

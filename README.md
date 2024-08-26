@@ -142,5 +142,6 @@ No modules.
 | <a name="output_registry_ids"></a> [registry\_ids](#output\_registry\_ids) | The IDs of the created Azure Container Registries. |
 | <a name="output_registry_locations"></a> [registry\_locations](#output\_registry\_locations) | The locations of the created Azure Container Registries. |
 | <a name="output_registry_login_servers"></a> [registry\_login\_servers](#output\_registry\_login\_servers) | The login servers of the created Azure Container Registries. |
+| <a name="output_registry_names"></a> [registry\_names](#output\_registry\_names) | The names of the created Azure Container Registries. |
 | <a name="output_registry_skus"></a> [registry\_skus](#output\_registry\_skus) | The SKUs of the created Azure Container Registries. |
 | <a name="output_registry_tags"></a> [registry\_tags](#output\_registry\_tags) | The tags associated with the created Azure Container Registries. |
