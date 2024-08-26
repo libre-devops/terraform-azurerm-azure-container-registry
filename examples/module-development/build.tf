@@ -49,15 +49,8 @@ module "network" {
   }
 }
 
-resource "azurerm_user_assigned_identity" "uid" {
-  name                = "uid-${var.short}-${var.loc}-${var.env}-${random_string.random.result}"
-  resource_group_name = module.rg.rg_name
-  location            = module.rg.rg_location
-  tags                = module.rg.rg_tags
-}
-
 resource "azurerm_role_assignment" "contributor" {
-  principal_id         = azurerm_user_assigned_identity.uid.principal_id
+  principal_id         = data.azurerm_user_assigned_identity.mgmt_id.principal_id
   scope                = module.rg.rg_id
   role_definition_name = "Contributor"
 }
@@ -79,7 +72,6 @@ module "container_registry" {
       sku                   = "Basic"
       export_policy_enabled = true
       identity_ids = [
-        azurerm_user_assigned_identity.uid.id,
         data.azurerm_user_assigned_identity.mgmt_id.id
       ]
     },
@@ -114,7 +106,11 @@ resource "null_resource" "import_image" {
     EOT
   }
 
-  depends_on = [null_resource.azure_cli_login, module.container_registry]
+  depends_on = [
+    null_resource.azure_cli_login,
+    module.container_registry,
+    azurerm_role_assignment.contributor
+  ]
 }
 
 resource "azurerm_container_group" "agent_container" {
@@ -133,7 +129,6 @@ resource "azurerm_container_group" "agent_container" {
   identity {
     type = "UserAssigned"
     identity_ids = [
-      azurerm_user_assigned_identity.uid.id,
       data.azurerm_user_assigned_identity.mgmt_id.id
     ]
   }
@@ -158,6 +153,6 @@ resource "azurerm_container_group" "agent_container" {
 
   image_registry_credential {
     server                    = module.container_registry.registry_login_servers[0]
-    user_assigned_identity_id = azurerm_user_assigned_identity.uid.id
+    user_assigned_identity_id = data.azurerm_user_assigned_identity.mgmt_id.id
   }
 }
