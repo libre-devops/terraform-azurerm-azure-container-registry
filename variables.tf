@@ -57,7 +57,7 @@ variable "container_registries" {
   }
 
   validation {
-    condition     = alltrue([for r in values(var.container_registries) : r.network_rule_bypass_option == null || contains(["AzureServices", "None"], r.network_rule_bypass_option)])
+    condition     = alltrue([for r in values(var.container_registries) : r.network_rule_bypass_option == null ? true : contains(["AzureServices", "None"], r.network_rule_bypass_option)])
     error_message = "network_rule_bypass_option must be AzureServices or None."
   }
 }
