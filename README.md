@@ -1,116 +1,85 @@
+<!--
+  Keep the title and badges OUTSIDE the centered <div>: the Terraform Registry's markdown renderer
+  does not parse markdown inside an HTML block, so a # heading or [![badge]] in the div renders as
+  literal text on the registry. Only the logo (HTML) goes in the div.
+-->
+<div align="center">
+  <a href="https://libredevops.org">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="https://libredevops.org/assets/libre-devops-white.png">
+      <img alt="Libre DevOps" src="https://libredevops.org/assets/libre-devops-black.png" width="300">
+    </picture>
+  </a>
+</div>
+
+# Terraform Azure Container Registry
+
+Terraform module for Azure Container Registry, in the Libre DevOps style: fast to get going,
+secure by default, flexible when it matters.
+
+[![CI](https://github.com/libre-devops/terraform-azurerm-azure-container-registry/actions/workflows/ci.yml/badge.svg)](https://github.com/libre-devops/terraform-azurerm-azure-container-registry/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/libre-devops/terraform-azurerm-azure-container-registry?sort=semver&label=release)](https://github.com/libre-devops/terraform-azurerm-azure-container-registry/releases/latest)
+[![Terraform Registry](https://img.shields.io/badge/registry-libre--devops-7B42BC?logo=terraform&logoColor=white)](https://registry.terraform.io/namespaces/libre-devops)
+[![License](https://img.shields.io/github/license/libre-devops/terraform-azurerm-azure-container-registry)](./LICENSE)
+
+---
+
+## Overview
+
 ```hcl
-resource "azurerm_container_registry" "acr" {
-  for_each = { for registry in var.registries : registry.name => registry }
+module "container_registry" {
+  source  = "libre-devops/azure-container-registry/azurerm"
+  version = "~> 4.0"
 
-  name                          = each.value.name
-  resource_group_name           = each.value.rg_name
-  location                      = each.value.location
-  admin_enabled                 = each.value.admin_enabled
-  sku                           = title(each.value.sku)
-  public_network_access_enabled = try(each.value.public_network_access_enabled, null)
-  retention_policy_in_days      = try(each.value.retention_policy.days, null)
-  trust_policy_enabled          = try(each.value.trust_policy.enabled, null)
-  quarantine_policy_enabled     = try(each.value.quarantine_policy_enabled, null)
-  zone_redundancy_enabled       = try(each.value.zone_redundancy_enabled, null)
-  export_policy_enabled         = try(each.value.export_policy_enabled, null)
-  data_endpoint_enabled         = try(each.value.data_endpoint_enabled, null)
-  anonymous_pull_enabled        = try(each.value.anonymous_pull_enabled, null)
-  network_rule_bypass_option    = try(each.value.network_rule_bypass_option, null)
-  tags                          = each.value.tags
+  resource_group_id = module.rg.ids["rg-ldo-uks-dev-001"]
+  location          = "uksouth"
+  tags              = module.tags.tags
 
-  dynamic "georeplications" {
-    for_each = title(each.value.sku) == "Premium" && each.value.georeplications != null ? [each.value.georeplications] : []
-    content {
-      location                  = georeplications.value.location
-      zone_redundancy_enabled   = georeplications.value.zone_redundancy_enabled
-      tags                      = georeplications.value.tags
-      regional_endpoint_enabled = georeplications.value.regional_endpoint_enabled
-    }
+  container_registries = {
+    "acrldouksdev001" = {}
   }
-
-  dynamic "network_rule_set" {
-    for_each = each.value.sku == "Premium" && each.value.network_rule_set != null ? [each.value.network_rule_set] : []
-    content {
-      default_action = network_rule_set.value.default_action
-
-      dynamic "ip_rule" {
-        for_each = network_rule_set.value.ip_rule != null ? [network_rule_set.value.ip_rule] : []
-        content {
-          action   = ip_rule.value.action
-          ip_range = ip_rule.value.ip_range
-        }
-      }
-    }
-  }
-
-  dynamic "identity" {
-    for_each = each.value.identity_type == "SystemAssigned" ? [each.value.identity_type] : []
-    content {
-      type = each.value.identity_type
-    }
-  }
-
-  dynamic "identity" {
-    for_each = each.value.identity_type == "SystemAssigned, UserAssigned" ? [each.value.identity_type] : []
-    content {
-      type         = each.value.identity_type
-      identity_ids = try(each.value.identity_ids, [])
-    }
-  }
-
-  dynamic "identity" {
-    for_each = each.value.identity_type == "UserAssigned" ? [each.value.identity_type] : []
-    content {
-      type         = each.value.identity_type
-      identity_ids = length(try(each.value.identity_ids, [])) > 0 ? each.value.identity_ids : []
-    }
-  }
-
-  dynamic "encryption" {
-    for_each = each.value.encryption != null ? [each.value.encryption] : []
-    content {
-      key_vault_key_id   = encryption.value.key_vault_key_id
-      identity_client_id = encryption.value.identity_client_id
-    }
-  }
-}
-
-locals {
-  flattened_pools = flatten([
-    for registry in var.registries :
-    registry.agent_pool != null ? [
-      for pool in registry.agent_pool : {
-        registry_name = registry.name
-        pool          = pool
-      }
-    ] : []
-  ])
-}
-
-
-resource "azurerm_container_registry_agent_pool" "agent_pool" {
-  for_each = { for item in local.flattened_pools : "${item.registry_name}-${item.pool.name}" => item }
-
-  name                    = each.value.pool.name
-  resource_group_name     = azurerm_container_registry.acr[each.value.registry_name].resource_group_name
-  location                = azurerm_container_registry.acr[each.value.registry_name].location
-  container_registry_name = azurerm_container_registry.acr[each.value.registry_name].name
-
-  instance_count            = try(each.value.pool.instance_count, 1)
-  tier                      = try(each.value.pool.tier, "S1")
-  virtual_network_subnet_id = try(each.value.pool.virtual_network_subnet_id, null)
-  tags                      = try(each.value.pool.tags, null)
 }
 ```
+
+That single entry gets a Standard registry with secure defaults a bare registry does not give
+you: the admin account is OFF (it is a shared-credential surface; use AcrPull/AcrPush role
+assignments or a scoped token instead) and anonymous pull is OFF. Every default has an explicit
+override.
+
+- **Registries as a map.** Provision many registries in one call, each toggled and tuned on its
+  own via `for_each`.
+- **Premium features, guarded.** Georeplication and zone redundancy are Premium-only, and a
+  validation rejects setting them on a Basic or Standard registry rather than letting the apply
+  fail. `georeplications` is a list of regions, each with its own regional endpoint and zone
+  redundancy.
+- **Identity ready.** Attach a system and/or user assigned identity for customer-managed key
+  encryption or pulling base images from another registry.
+- **The full provider surface.** admin, anonymous pull, public network access, the export,
+  quarantine, and trust policies, the retention policy, `network_rule_bypass_option`, and zone
+  redundancy are all exposed. (The `network_rule_set` block was removed from the provider in
+  azurerm 4.x; restrict access with `public_network_access_enabled` plus a private endpoint.)
+
+## Examples
+
+- [`examples/minimal`](./examples/minimal) - one Standard registry with the secure defaults,
+  applied and verified in CI.
+- [`examples/complete`](./examples/complete) - a Premium registry with a system-assigned
+  identity, zone redundancy, a georeplication, a retention policy, and the export and quarantine
+  policies set.
+
+<!-- BEGIN_TF_DOCS -->
 ## Requirements
 
-No requirements.
+| Name | Version |
+|------|---------|
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.9.0, < 2.0.0 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 4.0.0, < 5.0.0 |
 
 ## Providers
 
 | Name | Version |
 |------|---------|
-| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | n/a |
+| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | 4.80.0 |
 
 ## Modules
 
@@ -120,28 +89,24 @@ No modules.
 
 | Name | Type |
 |------|------|
-| [azurerm_container_registry.acr](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/container_registry) | resource |
-| [azurerm_container_registry_agent_pool.agent_pool](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/container_registry_agent_pool) | resource |
+| [azurerm_container_registry.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/container_registry) | resource |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_registries"></a> [registries](#input\_registries) | List of registry configurations. | <pre>list(object({<br>    name                          = string<br>    rg_name                       = string<br>    location                      = string<br>    admin_enabled                 = optional(bool, false)<br>    sku                           = optional(string, "Standard")<br>    public_network_access_enabled = optional(bool, true)<br>    quarantine_policy_enabled     = optional(bool, false)<br>    zone_redundancy_enabled       = optional(bool, false)<br>    export_policy_enabled         = optional(bool, false)<br>    data_endpoint_enabled         = optional(bool, false)<br>    anonymous_pull_enabled        = optional(bool, false)<br>    network_rule_bypass_option    = optional(string, "AzureServices")<br>    georeplications = optional(list(object({<br>      location                = string<br>      zone_redundancy_enabled = optional(bool)<br>      tags                    = optional(map(string))<br>    })))<br>    network_rule_set = optional(object({<br>      default_action = string<br>      ip_rule = optional(list(object({<br>        action   = string<br>        ip_range = string<br>      })))<br>      virtual_network = optional(list(object({<br>        action    = string<br>        subnet_id = string<br>      })))<br>    }))<br>    retention_policy = optional(object({<br>      days    = number<br>      enabled = bool<br>    }))<br>    trust_policy = optional(object({<br>      enabled = bool<br>    }))<br>    identity_type = optional(string)<br>    identity_ids  = optional(list(string))<br>    encryption = optional(object({<br>      enabled            = bool<br>      key_vault_key_id   = optional(string)<br>      identity_client_id = optional(string)<br>    }))<br>    tags = optional(map(string))<br>    agent_pool = optional(list(object({<br>      name                      = string<br>      instance_count            = optional(number, 1)<br>      tier                      = optional(string, "S1")<br>      virtual_network_subnet_id = optional(string)<br>      tags                      = optional(map(string))<br>    })))<br>  }))</pre> | `[]` | no |
+| <a name="input_container_registries"></a> [container\_registries](#input\_container\_registries) | Azure container registries keyed by name. Fast to get going: an entry with just a name gets a<br/>Standard registry with the admin account OFF, anonymous pull OFF, and public network access<br/>on, all overridable. Flexible when it matters: the full provider surface is here.<br/><br/>SECURE DEFAULTS overriding a bare registry: admin\_enabled false (the admin account is a<br/>shared-credential surface; use AcrPull/AcrPush role assignments or a token instead) and<br/>anonymous\_pull\_enabled false. sku defaults to Standard.<br/><br/>GEOREPLICATION and ZONE REDUNDANCY are Premium-only; a check enforces that georeplications<br/>are only set on a Premium registry. IDENTITY attaches a system and/or user assigned identity<br/>(for customer-managed keys or pulling base images from another registry). | <pre>map(object({<br/>    sku                           = optional(string, "Standard")<br/>    admin_enabled                 = optional(bool, false)<br/>    anonymous_pull_enabled        = optional(bool, false)<br/>    public_network_access_enabled = optional(bool, true)<br/>    data_endpoint_enabled         = optional(bool)<br/>    export_policy_enabled         = optional(bool)<br/>    quarantine_policy_enabled     = optional(bool)<br/>    trust_policy_enabled          = optional(bool)<br/>    retention_policy_in_days      = optional(number)<br/>    network_rule_bypass_option    = optional(string)<br/>    zone_redundancy_enabled       = optional(bool)<br/><br/>    identity = optional(object({<br/>      type         = string<br/>      identity_ids = optional(list(string))<br/>    }))<br/><br/>    georeplications = optional(list(object({<br/>      location                  = string<br/>      regional_endpoint_enabled = optional(bool)<br/>      zone_redundancy_enabled   = optional(bool)<br/>      tags                      = optional(map(string))<br/>    })), [])<br/><br/>    tags = optional(map(string))<br/>  }))</pre> | `{}` | no |
+| <a name="input_location"></a> [location](#input\_location) | Azure region for all registries in this module. | `string` | n/a | yes |
+| <a name="input_resource_group_id"></a> [resource\_group\_id](#input\_resource\_group\_id) | Id of the resource group the registries live in; the module parses the name from it. | `string` | n/a | yes |
+| <a name="input_tags"></a> [tags](#input\_tags) | Tags applied to all registries; per-registry tags override these. | `map(string)` | `{}` | no |
 
 ## Outputs
 
 | Name | Description |
 |------|-------------|
-| <a name="output_agent_pool_ids"></a> [agent\_pool\_ids](#output\_agent\_pool\_ids) | The IDs of the Azure Container Registry Agent Pools. |
-| <a name="output_agent_pool_locations"></a> [agent\_pool\_locations](#output\_agent\_pool\_locations) | The locations of the Azure Container Registry Agent Pools. |
-| <a name="output_agent_pool_names"></a> [agent\_pool\_names](#output\_agent\_pool\_names) | The names of the Azure Container Registry Agent Pools. |
-| <a name="output_registry_admin_passwords"></a> [registry\_admin\_passwords](#output\_registry\_admin\_passwords) | The admin passwords of the created Azure Container Registries, if admin is enabled. |
-| <a name="output_registry_admin_usernames"></a> [registry\_admin\_usernames](#output\_registry\_admin\_usernames) | The admin usernames of the created Azure Container Registries, if admin is enabled. |
-| <a name="output_registry_identities"></a> [registry\_identities](#output\_registry\_identities) | The identities of the Azure Container Registries. |
-| <a name="output_registry_ids"></a> [registry\_ids](#output\_registry\_ids) | The IDs of the created Azure Container Registries. |
-| <a name="output_registry_locations"></a> [registry\_locations](#output\_registry\_locations) | The locations of the created Azure Container Registries. |
-| <a name="output_registry_login_servers"></a> [registry\_login\_servers](#output\_registry\_login\_servers) | The login servers of the created Azure Container Registries. |
-| <a name="output_registry_names"></a> [registry\_names](#output\_registry\_names) | The names of the created Azure Container Registries. |
-| <a name="output_registry_skus"></a> [registry\_skus](#output\_registry\_skus) | The SKUs of the created Azure Container Registries. |
-| <a name="output_registry_tags"></a> [registry\_tags](#output\_registry\_tags) | The tags associated with the created Azure Container Registries. |
+| <a name="output_container_registries"></a> [container\_registries](#output\_container\_registries) | Map of registry name to the full container registry object. |
+| <a name="output_container_registry_ids"></a> [container\_registry\_ids](#output\_container\_registry\_ids) | Map of registry name to id. |
+| <a name="output_container_registry_ids_zipmap"></a> [container\_registry\_ids\_zipmap](#output\_container\_registry\_ids\_zipmap) | Map of registry name to { name, id } for easy composition. |
+| <a name="output_identity_principal_ids"></a> [identity\_principal\_ids](#output\_identity\_principal\_ids) | Map of registry name to { system\_assigned } principal id (null where absent). |
+| <a name="output_login_servers"></a> [login\_servers](#output\_login\_servers) | Map of registry name to its login server (the pull/push host). |
+<!-- END_TF_DOCS -->
